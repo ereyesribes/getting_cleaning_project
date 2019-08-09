@@ -1,18 +1,19 @@
 library(data.table)
 
+# This function takes care of getting the column for the human readable activities.
 get_human_readable_activities <- function() {
   # Get the human readable activity labels
   label_codes = read.table('activity_labels.txt', sep = " ", header = F, col.names = c("number", "name"))
 
   # Read the activity data
-  label_train_file = file('train/y_train.txt')
   label_test_file = file('test/y_test.txt')
-  label_train = readLines(label_train_file)
+  label_train_file = file('train/y_train.txt')
   label_test = readLines(label_test_file)
+  label_train = readLines(label_train_file)
 
 
   # Make activities human readable.
-  label = c(label_train, label_test)
+  label = c(label_test, label_train)
   factor(label, levels = label_codes$number, labels = label_codes$name)
 }
 
@@ -24,12 +25,14 @@ feature_names = read.table('features.txt', sep = " ", header = F, col.names = c(
 fancy_feature_names = gsub('()', '',
   gsub('std', 'Standard Deviation ',
     gsub('Mag', 'Magnitude ',
-      gsub('Gyro', 'Gyroscope ',
-        gsub('Acc', 'Accelerometer ',
-          gsub('fBody', 'Fourier Body ',
-            gsub('tBody', 'Time Body ',
-              gsub('BodyBody', 'Body',
-                feature_names$feature
+      gsub('Jerk', 'Jerk ',
+        gsub('Gyro', 'Gyroscope ',
+          gsub('Acc', 'Accelerometer ',
+            gsub('fBody', 'Fourier Body ',
+              gsub('tBody', 'Time Body ',
+                gsub('BodyBody', 'Body',
+                  feature_names$feature
+                )
               )
             )
           )
