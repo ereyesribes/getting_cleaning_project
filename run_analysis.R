@@ -1,37 +1,34 @@
 library(data.table)
 
 # This function takes care of getting the column for the human readable activities.
-get_human_readable_activities <- function() {
+get_human_readable_activities <- function(set) {
   # Get the human readable activity labels
   label_codes = read.table('activity_labels.txt', sep = " ", header = F, col.names = c("number", "name"))
 
   # Read the activity data
-  label_test_file = file('test/y_test.txt')
-  label_train_file = file('train/y_train.txt')
-  label_test = readLines(label_test_file)
-  label_train = readLines(label_train_file)
+  label_file = file(paste0(set, '/y_', set, '.txt'))
+  labels = readLines(label_file)
 
+  # Close file connections
+  close(label_file)
 
   # Make activities human readable.
-  label = c(label_test, label_train)
-  factor(label, levels = label_codes$number, labels = label_codes$name)
+  factor(labels, levels = label_codes$number, labels = label_codes$name)
 }
 
-
-# Read feature names. then read X
-feature_names = read.table('features.txt', sep = " ", header = F, col.names = c("discard", "feature"))
-
 # Make the feature names more human readable.
-fancy_feature_names = gsub('()', '',
-  gsub('std', 'Standard Deviation ',
-    gsub('Mag', 'Magnitude ',
-      gsub('Jerk', 'Jerk ',
-        gsub('Gyro', 'Gyroscope ',
-          gsub('Acc', 'Accelerometer ',
-            gsub('fBody', 'Fourier Body ',
-              gsub('tBody', 'Time Body ',
-                gsub('BodyBody', 'Body',
-                  feature_names$feature
+make_fancy_feature_names <- function(feature_names) {
+  gsub('()', '',
+    gsub('std', 'Standard Deviation ',
+      gsub('Mag', 'Magnitude ',
+        gsub('Jerk', 'Jerk ',
+          gsub('Gyro', 'Gyroscope ',
+            gsub('Acc', 'Accelerometer ',
+              gsub('fBody', 'Fourier Body ',
+                gsub('tBody', 'Time Body ',
+                  gsub('BodyBody', 'Body',
+                    feature_names$feature
+                  )
                 )
               )
             )
@@ -40,7 +37,12 @@ fancy_feature_names = gsub('()', '',
       )
     )
   )
-)
+}
+
+# Read feature names. then read X
+feature_names = read.table('features.txt', sep = " ", header = F, col.names = c("discard", "feature"))
+
+fancy_feature_names = make_fancy_feature_names(feature_names)
 
 # Read test + train features.
 features_test = read.table('test/X_test.txt',
@@ -49,7 +51,8 @@ features_test = read.table('test/X_test.txt',
   col.names = fancy_feature_names
 )
 
-features_test$set = "test"
+features_test$Set = "test"
+features_test$Activity = get_human_readable_activities("test")
 
 features_train = read.table('train/X_train.txt',
   sep = "",
@@ -57,9 +60,13 @@ features_train = read.table('train/X_train.txt',
   col.names = fancy_feature_names
 )
 
-features_train$set = "train"
+features_train$Set = "train"
+features_train$Activity = get_human_readable_activities("train")
+
 
 features = rbind(features_test, features_train)
+
+print(names(features))
 
 # As a result of column names being coerced into dot-separated words, instead of spaces
 # Some fields can have multiple dots, or dots at the end, which harm readability.
@@ -69,10 +76,10 @@ names(features) = gsub('\\.$', '',
   )
 )
 
-features$activity = get_human_readable_activities()
 
-# keep only STD & means.
-features = features[, grep("(std|mean)\\(\\)", feature_names$feature)]
+# TODO: SUBJECT.
+# keep only STD & means (& set, activity.).
+features = features[, grep("((Standard\\.Deviation|mean)|^Set$|^Activity$)", names(features))]
 
 
 # Write out our tidy dataset.
