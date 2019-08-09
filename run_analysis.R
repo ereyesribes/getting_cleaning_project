@@ -1,4 +1,5 @@
 library(data.table)
+library(dplyr)
 
 # This function takes care of getting the column for the human readable activities.
 get_human_readable_activities <- function(set) {
@@ -23,6 +24,8 @@ get_subjects <- function(set) {
 
   # Close file connection
   close(subject_file)
+
+  subjects = factor(subjects, levels = 1:30, labels = 1:30)
 
   subjects
 }
@@ -66,7 +69,7 @@ features_test = read.table('test/X_test.txt',
 Activity = get_human_readable_activities("test")
 Subject = get_subjects('test')
 
-features_test = cbind(Subject, Set, Activity, features_test)
+features_test = cbind(Subject, Activity, features_test)
 
 
 # Read train features
@@ -93,10 +96,16 @@ names(features) = gsub('\\.$', '',
   )
 )
 
-
 # keep only STD & means (& set, activity.).
 features = features[, grep("((Standard\\.Deviation|mean)|^Set$|^Activity$|^Subject$)", names(features))]
+
+features = arrange(features, Subject, Activity)
 
 
 # Write out our tidy dataset.
 write.csv(features, "tidy_dataset.csv")
+
+# Make a dataset with the averages for every subject + activity combo.
+averages = features %>% group_by(Subject, Activity) %>% summarise_all(mean) %>% arrange(Subject, Activity)
+
+write.csv(averages, "averages.csv")
