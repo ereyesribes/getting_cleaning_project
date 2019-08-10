@@ -111,9 +111,9 @@ features = arrange(features, Subject, Activity)
 
 
 # Write out our tidy dataset.
-write.csv(features, "tidy_dataset.csv")
+write.table(features, "tidy_dataset.txt", row.name = F)
 
 # Step 5: Make a dataset with the averages for every subject + activity combo.
 averages = features %>% group_by(Subject, Activity) %>% summarise_all(mean) %>% arrange(Subject, Activity)
 
-write.csv(averages, "averages.csv")
+write.table(averages, "averages.txt", row.name = F)
