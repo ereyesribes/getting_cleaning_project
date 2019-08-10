@@ -1,14 +1,24 @@
 library(data.table)
 library(dplyr)
 
+download_dataset <- function() {
+  dataset_url = 'https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip'
+  dest = 'data/dataset.zip'
+
+  download.file(dataset_url, dest)
+  unzip(dest, exdir = 'data/')
+
+  file.remove(dest)
+}
+
 # This function takes care of getting the column for the human readable activities.
 # This is invoked for both datasets, and takes care of step 3.
 get_human_readable_activities <- function(set) {
   # Get the human readable activity labels
-  label_codes = read.table('activity_labels.txt', sep = " ", header = F, col.names = c("number", "name"))
+  label_codes = read.table('data/UCI HAR Dataset/activity_labels.txt', sep = " ", header = F, col.names = c("number", "name"))
 
   # Read the activity data
-  label_file = file(paste0(set, '/y_', set, '.txt'))
+  label_file = file(paste0('data/UCI HAR Dataset/', set, '/y_', set, '.txt'))
   labels = readLines(label_file)
 
   # Close file connection
@@ -20,7 +30,7 @@ get_human_readable_activities <- function(set) {
 
 get_subjects <- function(set) {
   # Read the subject data
-  subject_file = file(paste0(set, '/subject_', set, '.txt'))
+  subject_file = file(paste0('data/UCI HAR Dataset/', set, '/subject_', set, '.txt'))
   subjects = readLines(subject_file)
 
   # Close file connection
@@ -54,16 +64,18 @@ make_fancy_feature_names <- function(feature_names) {
   )
 }
 
+# Step 0. Fetch the dataset
+download_dataset()
 
 # Step 1. Merge training and test sets.
 # Read feature names.
-feature_names = read.table('features.txt', sep = " ", header = F, col.names = c("discard", "feature"))
+feature_names = read.table('data/UCI HAR Dataset/features.txt', sep = " ", header = F, col.names = c("discard", "feature"))
 
 # This takes care of step 4. Doesn't get any more descriptive than this.
 fancy_feature_names = make_fancy_feature_names(feature_names)
 
 # Read test features.
-features_test = read.table('test/X_test.txt',
+features_test = read.table('data/UCI HAR Dataset/test/X_test.txt',
   sep = "",
   header = F,
   col.names = fancy_feature_names
@@ -72,7 +84,7 @@ features_test = read.table('test/X_test.txt',
 features_test = cbind(Subject = get_subjects('test'), Activity = get_human_readable_activities("test"), features_test)
 
 # Read train features
-features_train = read.table('train/X_train.txt',
+features_train = read.table('data/UCI HAR Dataset/train/X_train.txt',
   sep = "",
   header = F,
   col.names = fancy_feature_names
